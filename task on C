@@ -1,50 +1,53 @@
 #include <stdio.h>
-#define MAX_N 100000 // максимальное число таблиц
-int n, m; // количество таблиц и запросов
-int parent[MAX_N]; // массив предков
-int size[MAX_N]; // массив размеров таблиц
 
-// Функция поиска предка с укладкой
-// сжатия пути
-int find_set(int table) {
-    if (table != parent[table]) // если таблица не ссылается сама на себя
-        parent[table] = find_set(parent[table]); // ищем предка для этой таблицы
-    return parent[table]; // возвращаем найденного предка
-}
+#define MAXN 100005
 
-// Функция объединения таблиц
-void union_sets(int dest, int source) {
-    dest = find_set(dest); // ищем предка для таблицы dest
-    source = find_set(source); // ищем предка для таблицы source
-    if (dest != source) { // если таблицы не ссылаются на один и тот же предок
-        if (size[dest] < size[source]) { // если размер dest меньше size
-            int temp = dest; // меняем местами dest и source
-            dest = source;
-            source = temp;
-        }
-        parent[source] = dest; // присваиваем source ссылку на dest
-        size[dest] += size[source]; // увеличиваем размер dest на размер source
-        size[source] = 0; // обнуляем размер source
-    }
+int parent[MAXN];   // массив для хранения ссылок на родительские таблицы
+int size[MAXN];     // массив для хранения размеров таблиц
+int output[MAXN];   // массив для хранения вывода
+
+// функция поиска родительской таблицы
+int find(int x) {
+    while (x != parent[x])
+        x = parent[x];
+    return x;
 }
 
 int main() {
-    scanf("%d%d", &n, &m); // считываем количество таблиц и запросов
-    for (int i = 0; i < n; ++i) { // инициализируем массивы
+    int n, m;
+    scanf("%d%d", &n, &m);
+
+    // инициализация массивов
+    for (int i = 1; i <= n; i++) {
         parent[i] = i;
-        scanf("%d", &size[i]); // считываем размеры таблиц
+        scanf("%d", &size[i]);
     }
-    for (int i = 0; i < m; ++i) { // обрабатываем запросы
-        int dest, source;
-        scanf("%d%d", &dest, &source); // считываем номера таблиц
-        --dest; --source; // уменьшаем на 1, чтобы индексация начиналась с 0
-        union_sets(dest, source); // объединяем таблицы
-        int max_size = 0;
-        for (int j = 0; j < n; ++j) { // ищем максимальный размер таблицы
-            if (parent[j] == j && size[j] > max_size) // если это предок и размер больше максимального
-                max_size = size[j]; // обновляем максимальный размер
+
+    int max_size = 0;
+    for (int i = 0; i < m; i++) {
+        int dest, src;
+        scanf("%d%d", &dest, &src);
+
+        // находим реальную таблицу для destination и source
+        dest = find(dest);
+        src = find(src);
+
+        // объединяем таблицы, если они различны
+        if (dest != src) {
+            parent[src] = dest;
+            size[dest] += size[src];
+            size[src] = 0;
         }
-        printf("%d\n", max_size); // выводим максимальный размер таблицы
+
+        // сохраняем максимальный размер таблицы
+        if (size[dest] > max_size)
+            max_size = size[dest];
+        output[i] = max_size;
     }
+
+    // выводим все значения максимального размера таблицы
+    for (int i = 0; i < m; i++)
+        printf("%d\n", output[i]);
+
     return 0;
 }
