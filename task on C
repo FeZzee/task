@@ -1,0 +1,50 @@
+#include <stdio.h>
+#define MAX_N 100000 // максимальное число таблиц
+int n, m; // количество таблиц и запросов
+int parent[MAX_N]; // массив предков
+int size[MAX_N]; // массив размеров таблиц
+
+// Функция поиска предка с укладкой
+// сжатия пути
+int find_set(int table) {
+    if (table != parent[table]) // если таблица не ссылается сама на себя
+        parent[table] = find_set(parent[table]); // ищем предка для этой таблицы
+    return parent[table]; // возвращаем найденного предка
+}
+
+// Функция объединения таблиц
+void union_sets(int dest, int source) {
+    dest = find_set(dest); // ищем предка для таблицы dest
+    source = find_set(source); // ищем предка для таблицы source
+    if (dest != source) { // если таблицы не ссылаются на один и тот же предок
+        if (size[dest] < size[source]) { // если размер dest меньше size
+            int temp = dest; // меняем местами dest и source
+            dest = source;
+            source = temp;
+        }
+        parent[source] = dest; // присваиваем source ссылку на dest
+        size[dest] += size[source]; // увеличиваем размер dest на размер source
+        size[source] = 0; // обнуляем размер source
+    }
+}
+
+int main() {
+    scanf("%d%d", &n, &m); // считываем количество таблиц и запросов
+    for (int i = 0; i < n; ++i) { // инициализируем массивы
+        parent[i] = i;
+        scanf("%d", &size[i]); // считываем размеры таблиц
+    }
+    for (int i = 0; i < m; ++i) { // обрабатываем запросы
+        int dest, source;
+        scanf("%d%d", &dest, &source); // считываем номера таблиц
+        --dest; --source; // уменьшаем на 1, чтобы индексация начиналась с 0
+        union_sets(dest, source); // объединяем таблицы
+        int max_size = 0;
+        for (int j = 0; j < n; ++j) { // ищем максимальный размер таблицы
+            if (parent[j] == j && size[j] > max_size) // если это предок и размер больше максимального
+                max_size = size[j]; // обновляем максимальный размер
+        }
+        printf("%d\n", max_size); // выводим максимальный размер таблицы
+    }
+    return 0;
+}
